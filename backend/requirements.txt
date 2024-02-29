@@ -1,0 +1,5 @@
+fastapi
+metacatalog
+uvicorn
+pandas
+xarray[complete]
