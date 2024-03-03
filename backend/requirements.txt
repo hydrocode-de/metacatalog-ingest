@@ -3,3 +3,4 @@ metacatalog
 uvicorn
 pandas
 xarray[complete]
+python-dotenv
