@@ -1,6 +1,6 @@
 fastapi
 metacatalog
 uvicorn
-pandas
 xarray[complete]
 python-dotenv
+polars
