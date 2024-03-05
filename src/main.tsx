@@ -4,13 +4,16 @@ import './index.css';
 
 // import Application wide context providers
 import { SettingsProvider } from "./context/SettingsContext"
-import App from './App';
+import { LookupDataProvider } from './context/LookupDataContext';
 
+import App from './App';
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
       <SettingsProvider>
-        <App />
+        <LookupDataProvider>
+          <App />
+        </LookupDataProvider>
       </SettingsProvider>
   </React.StrictMode>,
 )
