@@ -98,7 +98,8 @@ const UploadForm: React.FC<UploadFormProps> = ({ backendUrl }) => {
                 accept=".csv,.nc"
                 //multiple
                 beforeUpload={() => false}
-                onChange={info => setFile(info.file)}
+                onChange={info => info.fileList.length > 0 ? setFile(info.fileList[0]) : setFile(undefined)}
+                onRemove={() => setFile(undefined)}
             >
                 <Button icon={<UploadOutlined />}>Select Files</Button>
             </Dragger>
