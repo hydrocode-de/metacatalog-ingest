@@ -9,6 +9,7 @@ import { Keyword, License, Variable, Author } from './Models'
 import AddAuthorForm from './components/AddAuthorForm';
 import DataPropertiesForm from './components/DataPropertiesForm';
 import { useData } from './context/UploadDataContext';
+import AuthorSelectForm from './components/AuthorSelectForm';
 
 const { TextArea } = Input;
 
@@ -33,9 +34,6 @@ const UploadForm: React.FC = () => {
     const [license, setLicense] = useState<License | null>(null)
     const [variables, setVariables] = useState<Variable[]>([])
     const [variable, setVariable] = useState<Variable | null>(null)
-    const [authors, setAuthors] = useState<Author[]>([])
-    const [firstAuthor, setFirstAuthor] = useState<Author | null>(null)
-    const [coAuthors, setCoAuthors] = useState<Author[]>([])
 
     // keyword management
     const [keywords, setKeywords] = useState<Keyword[]>([])
@@ -72,9 +70,6 @@ const UploadForm: React.FC = () => {
         // fetch the variables
         fetch(`${backendUrl}variables`).then(response => response.json()).then(data => setVariables(data))
 
-        // fetch the authors
-        fetch(`${backendUrl}authors`).then(response => response.json()).then(data => setAuthors(data))
-
         // finally set dirty to false again
         setDirty(false)
     }, [backendUrl, dirty])
@@ -84,14 +79,6 @@ const UploadForm: React.FC = () => {
         fetch(`${backendUrl}datasets/exists?title=${title}`).then(response => response.json()).then(exists => setTitleExists(exists))
     })
 
-    // some helper functions to format some stuff
-    const authorLabel = (author: Author): string => {
-        if (author.is_organisation) {
-            return `${author.organisation_name} (${author.organisation_abbrev})`
-        } else {
-            return `${author.first_name} ${author.last_name}`
-        }
-    }
 
     return (
         <>
@@ -121,28 +108,7 @@ const UploadForm: React.FC = () => {
                     </Collapse>
 
                     <Title level={4}>Authors</Title>
-                    <Flex style={{width: '100%', alignItems: 'center'}}>
-                        <div style={{marginRight: '1rem'}}>First Author</div>
-                        <Select
-                            style={{flexGrow: 1}}
-                            value={firstAuthor?.uuid}
-                            placeholder="Select the first author"
-                            options={authors.map(author => ({label: authorLabel(author), value: author.uuid}))}
-                            onChange={value => setFirstAuthor(authors.find(author => author.uuid === value) || null)}
-                        />
-                        <AddAuthorForm backendUrl={backendUrl} onSuccess={() =>  setDirty(true)} />
-                    </Flex>
-                    <Flex style={{width: '100%', alignItems: 'center'}}>
-                        <div style={{marginRight: '1rem'}}>Co-Authors</div>
-                        <Select
-                            mode="multiple"
-                            style={{flexGrow: 1}}
-                            value={coAuthors.map(a => a.uuid)}
-                            placeholder="Add all co-authors in order if any"
-                            options={authors.filter(a => !firstAuthor || (firstAuthor && firstAuthor.id !== a.id)).map(a => ({label: authorLabel(a), value: a.uuid}))}
-                            onChange={(values) => setCoAuthors(authors.filter(a => values.includes(a.uuid)))}
-                        />
-                    </Flex>
+                    <AuthorSelectForm />
                 </Collapse.Panel>
             </Collapse>
 
