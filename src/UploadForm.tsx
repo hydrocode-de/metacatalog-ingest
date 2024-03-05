@@ -1,20 +1,21 @@
+import { useEffect, useState } from 'react';
 import {  AutoComplete, Button, Checkbox, Collapse, Flex, Form, Input, Select, Table, Tree, UploadFile } from 'antd';
 import { UploadOutlined, DeleteFilled } from '@ant-design/icons';
 import Dragger from 'antd/es/upload/Dragger';
 import Title from 'antd/es/typography/Title';
-import { useEffect, useState } from 'react';
 
+import { useSettings } from './context/SettingsContext'
 import { Keyword, License, Variable, Author } from './Models'
 import AddAuthorForm from './components/AddAuthorForm';
 import DataPropertiesForm from './components/DataPropertiesForm';
 
 const { TextArea } = Input;
 
-interface UploadFormProps {
-    backendUrl: string
-}
 
-const UploadForm: React.FC<UploadFormProps> = ({ backendUrl }) => {
+const UploadForm: React.FC = () => {
+    // get the current backend url
+    const { backendUrl } = useSettings()
+    
     // mark the lookup data as dirty
     const [dirty, setDirty] = useState<boolean>(false)
 

@@ -6,12 +6,11 @@ import { UploadOutlined } from "@ant-design/icons"
 
 import UploadForm from "./UploadForm"
 
+
 const {  Header, Sider, Content } = Layout
 
 function App() {
   const collapsed = useSignal(false)
-  //const backendUrl = useSignal('http://localhost:8000/api/')
-  const [backendUrl, setBackendUrl] = useState<string>('http://127.0.0.1:8000/api/')
 
   // get the design
   const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken()
@@ -41,9 +40,8 @@ function App() {
             </Header>
 
             <Content style={{ width: 'auto', boxSizing: 'border-box', margin: '16px 24px', padding: '24px', height: '100%', overflowY: 'scroll', background: colorBgContainer, borderRadius: borderRadiusLG}}>
-              <Input type="text" value={backendUrl} onChange={e => setBackendUrl(e.target.value)} />
               
-              <UploadForm backendUrl={backendUrl} />
+              <UploadForm />
             </Content>
         </Layout>
 
