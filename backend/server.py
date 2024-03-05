@@ -1,12 +1,14 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Literal
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from dotenv import load_dotenv
 from metacatalog import api
+import polars as pl
 
 import models
 
@@ -102,6 +104,36 @@ def title_exists(title: str) -> bool:
     entry = api.find_entry(session, title=title, return_iterator=True).first()
 
     return entry is not None
+
+# data-file previews
+class ColumnPreview(BaseModel):
+    name: str
+    data_type: Literal['number'] | Literal['string'] | Literal['datetime']
+
+class DataPreview(BaseModel):
+    num_rows: int
+    columns: List[ColumnPreview]
+
+@app.post("/api/data/preview", response_model=DataPreview)
+async def preview_data(file: UploadFile):
+    try:
+        # Read the uploaded file
+        # df = pd.read_csv(file.file)
+        df = pl.read_csv(file.file, try_parse_dates=True)
+        
+        # Get column names and data types
+        column_names = df.columns
+        column_types = ['datetime' if _.is_temporal() else 'number' if _.is_numeric() else 'string' for _ in df.dtypes]
+        
+        # Get number of rows
+        num_rows = len(df)
+        
+        return {
+            'columns': [{'name': name, 'data_type': data_type} for name, data_type in zip(column_names, column_types)],
+            'num_rows': num_rows,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Mount the static files directory
 app.mount("/", StaticFiles(directory= BASE / 'static', html=True), name="static")
