@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import {  AutoComplete, Button, Checkbox, Collapse, Flex, Form, Input, Select, Table, Tree, UploadFile } from 'antd';
+import {  AutoComplete, Button, Checkbox, Collapse, Flex, FloatButton, Form, Input, Select, Table, Tree, UploadFile } from 'antd';
 import { UploadOutlined, DeleteFilled } from '@ant-design/icons';
 import Dragger from 'antd/es/upload/Dragger';
 import Title from 'antd/es/typography/Title';
@@ -8,6 +8,7 @@ import { useSettings } from './context/SettingsContext'
 import { Keyword, License, Variable, Author } from './Models'
 import AddAuthorForm from './components/AddAuthorForm';
 import DataPropertiesForm from './components/DataPropertiesForm';
+import { useData } from './context/UploadDataContext';
 
 const { TextArea } = Input;
 
@@ -15,7 +16,8 @@ const { TextArea } = Input;
 const UploadForm: React.FC = () => {
     // get the current backend url
     const { backendUrl } = useSettings()
-    
+    const { metadata, isValid, updateMetadata} = useData()
+
     // mark the lookup data as dirty
     const [dirty, setDirty] = useState<boolean>(false)
 
@@ -23,9 +25,8 @@ const UploadForm: React.FC = () => {
     const [file, setFile] = useState<UploadFile>()
 
     // other information
-    const [title, setTitle] = useState<string>('')
+    const [title, setTitle] = useState<string>(metadata.title || '')
     const [titleExists, setTitleExists] = useState<boolean>(false)
-    const [abstract, setAbstract] = useState<string>('')
 
     // lookup values
     const [licenses, setLicenses] = useState<License[]>([])
@@ -105,12 +106,13 @@ const UploadForm: React.FC = () => {
                 <Button icon={<UploadOutlined />}>Select Files</Button>
             </Dragger>
 
-            <Title level={2}>Metadata</Title>
+            <Title level={2}>{metadata.title || 'Metadata'}</Title>
 
             <Collapse>
                 <Collapse.Panel key="main_info" header="General Information">
-                    <Input addonBefore="Title" placeholder="Unique descriptive Dataset title" value={title} onChange={e => setTitle(e.target.value)} status={titleExists ? 'error' : ''} />
-                    <TextArea placeholder="Abstract" autoSize={{minRows: 5, maxRows: 10}} value={abstract} onChange={e => setAbstract(e.target.value)} />
+                    {/* <Input addonBefore="Title" placeholder="Unique descriptive Dataset title" value={title} onChange={e => setTitle(e.target.value)} status={titleExists ? 'error' : ''} /> */}
+                    <Input addonBefore="Title" placeholder="Unique descriptive Dataset title" value={metadata.title} onChange={e => updateMetadata('title', e.target.value)} status={titleExists ? 'error' : ''} />
+                    <TextArea placeholder="Abstract" autoSize={{minRows: 5, maxRows: 10}} value={metadata.abstract} onChange={e => updateMetadata('abstract', e.target.value)} />
                     <Collapse>
                         <Collapse.Panel key="external_id" header="Optional Attributes">
                             <Input placeholder="optional ID by external data provider" addonBefore="External ID" />
@@ -219,6 +221,7 @@ const UploadForm: React.FC = () => {
                 </Collapse.Panel>
             </Collapse>
             
+            <FloatButton type={isValid ? 'primary' : 'default'} icon={<UploadOutlined />} onClick={() => isValid ? console.log(metadata) : console.log('Data not valid')} />
         </>
     );
 };
