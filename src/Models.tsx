@@ -55,3 +55,33 @@ export interface Author {
     organisation_abbrev?: string | null;
 }
 
+export interface Detail {
+    id: number;
+    name: string;
+    value: string;
+    type: 'string' | 'date' | 'float' |'bool';
+}
+
+export interface DataSource {
+    id: number;
+    type: 'csv';
+    data_columns: string[];
+    spatial_scale?: {extent: string, resolution: number};
+    temporal_scale?: {resolution: string, extent: [string, string]}
+}
+
+export interface Metadata {
+    title: string;
+    abstract: string;
+    external_id?: string;
+    embargo?: boolean;
+    firstAuthor: Author;
+    coAuthors: Author[];
+    keywords: Keyword[];
+    variable: Variable;
+    license: License;
+    details: Detail[];
+    dataSource: DataSource;
+    uploadFile: File;
+}
+
