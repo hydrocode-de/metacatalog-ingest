@@ -1,6 +1,6 @@
 import {  useState } from 'react';
-import {   Badge, Button, Checkbox, Collapse, Flex,  Form, Input, Table, UploadFile } from 'antd';
-import { UploadOutlined, DeleteFilled } from '@ant-design/icons';
+import {   Badge, Button, Checkbox, Collapse, Input,  UploadFile } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
 import Dragger from 'antd/es/upload/Dragger';
 import Title from 'antd/es/typography/Title';
 
@@ -10,6 +10,7 @@ import { useData } from '../context/UploadDataContext';
 import AuthorSelectForm from './AuthorSelectForm';
 import MandatoryLookupForm from './MandatoryLookupForm';
 import ValidationResult from './ValidationResult';
+import DetailsForm from './DetailsForm';
 
 const { TextArea } = Input;
 
@@ -21,17 +22,6 @@ const UploadForm: React.FC = () => {
 
     // uploaded files
     const [file, setFile] = useState<UploadFile>()
-
-    // details
-    const [details, setDetails] = useState<{detailKey: string, detailValue: string}[]>([])
-    const [ detailForm ] = Form.useForm()
-
-
-    const onAddDetail = (newDetail: {detailKey: string, detailValue: string}) => {
-        setDetails([...details, newDetail])
-        detailForm.resetFields()
-    }
-
 
     return (
         <>
@@ -76,33 +66,7 @@ const UploadForm: React.FC = () => {
                 <Collapse.Panel key="metadata" header="Dataset Metadata">
                     <MandatoryLookupForm />
 
-                    <Title level={5}>Additional Details</Title>
-                    <p>This table takes any kind of vital metadata, that is not part of the mandatory scheme</p>
-                    <Flex style={{marginBottom: '1rem'}}>
-                        <Form form={detailForm} onFinish={onAddDetail} layout="inline">
-                            <Form.Item name="detailKey" label="Detail Key" required>
-                                <Input placeholder="unique key" type="text" />
-                            </Form.Item>
-                            <Form.Item name="detailValue" label="Detail Value" required>
-                                <Input placeholder="value" type="text" />
-                            </Form.Item>
-                            <Form.Item>
-                                <Button type="primary" htmlType="submit">Add</Button>
-                            </Form.Item>
-                        </Form>
-                    </Flex>
-                    <Table 
-                        columns={[
-                            {title: 'Detail Key', key: 'detailKey', dataIndex: 'detailKey'},
-                            {title: 'Detail Value', key: 'detailValue', dataIndex: 'detailValue'},
-                            {title: 'action', key: 'action', dataIndex: 'action'}
-                        ]}
-                        dataSource={[
-                            // add one line with colspan 3 at the end
-                            ...details.map((d, i) => ({key: i, detailKey: d.detailKey, detailValue: d.detailValue, action: <Button type="text" icon={<DeleteFilled />} onClick={() => setDetails(details.filter(o => o.detailKey !== d.detailKey))} />})),
-
-                        ]}
-                    />
+                    <DetailsForm />
                 </Collapse.Panel>
             </Collapse>
 
