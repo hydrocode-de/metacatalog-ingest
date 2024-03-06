@@ -1,7 +1,6 @@
 import { Flex, Select } from "antd"
 import AddAuthorForm from "./AddAuthorForm"
 import { useSettings } from "../context/SettingsContext"
-import { useEffect, useState } from "react"
 import { Author } from "../Models"
 import { useLookups } from "../context/LookupDataContext"
 import { useData } from "../context/UploadDataContext"
@@ -15,16 +14,6 @@ const AuthorSelectForm: React.FC = () => {
 
     // get the context to update the metadata
     const { metadata, updateMetadata } = useData()
-
-    // create a state to set the current first author and list of coauthors
-    const [firstAuthor, setFirstAuthor] = useState<Author | null>(metadata.firstAuthor || null)
-    const [coAuthors, setCoAuthors] = useState<Author[]>(metadata.coAuthors || [])
-
-    // use Effect to update the Metadata whenever the firstAuthor or coAuthors change
-    useEffect(() => {
-        updateMetadata('firstAuthor', firstAuthor)
-        updateMetadata('coAuthors', coAuthors)
-    }, [firstAuthor, coAuthors]) 
 
     // some helper functions to format some stuff
     const authorLabel = (author: Author): string => {
@@ -44,7 +33,7 @@ const AuthorSelectForm: React.FC = () => {
                 value={metadata.firstAuthor?.uuid}
                 placeholder="Select the first author"
                 options={authors.map(author => ({label: authorLabel(author), value: author.uuid}))}
-                onChange={value => setFirstAuthor(authors.find(author => author.uuid === value) || null)}
+                onChange={value => updateMetadata('firstAuthor', authors.find(author => author.uuid === value) || null)}
             />
             <AddAuthorForm backendUrl={backendUrl} onSuccess={() =>  invalidate()} />
         </Flex>
@@ -53,10 +42,13 @@ const AuthorSelectForm: React.FC = () => {
             <Select
                 mode="multiple"
                 style={{flexGrow: 1}}
-                value={coAuthors.map(a => a.uuid)}
+                value={metadata.coAuthors?.map(a => a.uuid) || []}
                 placeholder="Add all co-authors in order if any"
-                options={authors.filter(a => !firstAuthor || (firstAuthor && firstAuthor.id !== a.id)).map(a => ({label: authorLabel(a), value: a.uuid}))}
-                onChange={(values) => setCoAuthors(authors.filter(a => values.includes(a.uuid)))}
+                options={authors
+                    .filter(a => !metadata.firstAuthor || metadata.firstAuthor.id !== a.id)
+                    .map(a => ({label: authorLabel(a), value: a.uuid}))
+                }
+                onChange={(values) => updateMetadata('coAuthors', authors.filter(a => values.includes(a.uuid)))}
             />
         </Flex>
     </>)

@@ -1,6 +1,6 @@
 import { Flex, Layout , theme} from "antd";
 import Title from "antd/es/typography/Title";
-import UploadForm from "../UploadForm";
+import UploadForm from "../components/UploadForm";
 import { UploadDataProvider, useData } from "../context/UploadDataContext";
 
 const {  Header, Content } = Layout
