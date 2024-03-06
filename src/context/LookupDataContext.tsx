@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { Author, License, Variable } from "../Models";
+import { Author, Keyword, License, Variable } from "../Models";
 import { useSettings } from "./SettingsContext";
 import axios from "axios";
 
@@ -7,6 +7,7 @@ interface LookupData {
     authors: Author[];
     licenses: License[];
     variables: Variable[];
+    keywords: Keyword[];
     invalidate: () => void;
 }
 
@@ -14,6 +15,7 @@ const initialState: LookupData = {
     authors: [],
     licenses: [],
     variables: [],
+    keywords: [],
     invalidate: () => {}
 }
 
@@ -31,6 +33,7 @@ export const LookupDataProvider: React.FC<React.PropsWithChildren> = ({children}
     const [authors, setAuthors] = useState<Author[]>([])
     const [licenses, setLicenses] = useState<License[]>([])
     const [variables, setVariables] = useState<Variable[]>([])
+    const [keywords, setKeywords] = useState<Keyword[]>([])
 
     const invalidate = () => {
         setDirty(true)
@@ -38,6 +41,9 @@ export const LookupDataProvider: React.FC<React.PropsWithChildren> = ({children}
 
     // whenever we are dirty, start loading the lookups again and start over
     useEffect(() => {
+        // start loading keywords first
+        const keywordPromise = axios.get<Keyword[]>(`${backendUrl}keywords`).then(response => setKeywords(response.data))
+
         // load authors
         const authorPromise = axios.get<Author[]>(`${backendUrl}authors`).then(response => setAuthors(response.data))
 
@@ -48,7 +54,7 @@ export const LookupDataProvider: React.FC<React.PropsWithChildren> = ({children}
         const variablePromise = axios.get<Variable[]>(`${backendUrl}variables`).then(response => setVariables(response.data))
 
         // finally wait for all promises and then set dirty to false again
-        Promise.all([authorPromise, licensePromise, variablePromise]).then(() => setDirty(false))
+        Promise.all([authorPromise, licensePromise, variablePromise, keywordPromise]).then(() => setDirty(false))
     }, [backendUrl, dirty])
 
     // build the return object
@@ -56,6 +62,7 @@ export const LookupDataProvider: React.FC<React.PropsWithChildren> = ({children}
         authors,
         licenses,
         variables,
+        keywords,
         invalidate
     }
     return (
