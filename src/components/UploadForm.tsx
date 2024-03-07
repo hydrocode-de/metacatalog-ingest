@@ -1,10 +1,8 @@
-import {  useState } from 'react';
-import {   Badge, Button, Checkbox, Collapse, Input,  UploadFile } from 'antd';
+import {   Badge, Button, Checkbox, Collapse, Input } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import Dragger from 'antd/es/upload/Dragger';
 import Title from 'antd/es/typography/Title';
 
-import { useSettings } from '../context/SettingsContext'
 import DataPropertiesForm from './DataPropertiesForm';
 import { useData } from '../context/UploadDataContext';
 import AuthorSelectForm from './AuthorSelectForm';
@@ -16,22 +14,18 @@ const { TextArea } = Input;
 
 
 const UploadForm: React.FC = () => {
-    // get the current backend url
-    const { backendUrl } = useSettings()
-    const { metadata, invalidMessages, updateMetadata} = useData()
-
-    // uploaded files
-    const [file, setFile] = useState<UploadFile>()
+    // load some necessary data from the data context
+    const { metadata, invalidMessages, updateMetadata, newUploadFile, removeUploadFile} = useData()
 
     return (
         <>
             <Dragger
                 style={{maxHeight: '150px'}}
-                accept=".csv,.nc"
+                accept=".csv"
                 //multiple
                 beforeUpload={() => false}
-                onChange={info => info.fileList.length > 0 ? setFile(info.fileList[0]) : setFile(undefined)}
-                onRemove={() => setFile(undefined)}
+                onChange={info => info.fileList.length > 0 ? newUploadFile(info.fileList[0]) : removeUploadFile()}
+                onRemove={() => removeUploadFile()}
             >
                 <Button icon={<UploadOutlined />}>Select Files</Button>
             </Dragger>
@@ -72,7 +66,7 @@ const UploadForm: React.FC = () => {
 
             <Collapse>
                 <Collapse.Panel key="data_props" header="Dataset properties">
-                    <DataPropertiesForm backendUrl={backendUrl} file={file} />
+                    <DataPropertiesForm />
                 </Collapse.Panel>
             </Collapse>
         </>

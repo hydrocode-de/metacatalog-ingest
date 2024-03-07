@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { Metadata } from "../Models";
 import { set, cloneDeep } from "lodash"
+import { UploadFile } from "antd";
 
 interface InvalidationMessage {
     type: 'error' | 'warn';
@@ -11,8 +12,11 @@ interface UploadData {
     metadata: Partial<Metadata>;
     isValid: boolean;
     invalidMessages: InvalidationMessage[];
+    uploadFile?: UploadFile;
     resetMetadata: () => void;
     updateMetadata: (key: string, value: any) => void;
+    newUploadFile: (file: UploadFile) => void;
+    removeUploadFile: () => void;
 }
 
 const initialUploadData: UploadData = {
@@ -20,7 +24,9 @@ const initialUploadData: UploadData = {
     isValid: false,
     invalidMessages: [],
     resetMetadata: () => {},
-    updateMetadata: () => {}
+    updateMetadata: () => {},
+    newUploadFile: () => {},
+    removeUploadFile: () => {},
 }
 
 // create the Context itself
@@ -31,6 +37,7 @@ export const UploadDataProvider: React.FC<React.PropsWithChildren> = ({ children
     const [metadata, setMetadata] = useState<Partial<Metadata>>({});
     const [isValid, setIsValid] = useState<boolean>(false);
     const [invalidMessages, setInvalidMessages] = useState<InvalidationMessage[]>([]);
+    const [uploadFile, setUploadFile] = useState<UploadFile>();
 
     const resetMetadata = () => {
         setMetadata({});
@@ -47,13 +54,36 @@ export const UploadDataProvider: React.FC<React.PropsWithChildren> = ({ children
         setMetadata(currentMetadata);
     }
 
+    // file handling
+    const newUploadFile = (file: UploadFile) => {
+        // set the file
+        setUploadFile(file)
+
+        // create a new datasource
+        // TODO: here we need to handle different datasource later
+        // TODO: how should the table actually be called?
+        updateMetadata('dataSource', {type: 'internal', path: file.name})
+
+    }
+    const removeUploadFile = () => {
+        // remove the file object
+        setUploadFile(undefined)
+
+        // remove the datasource
+        updateMetadata('dataSource', undefined)
+    }
+
+
     // create the context value to be passed to the Provider
     const uploadData: UploadData = {
         metadata,
         isValid,
         invalidMessages,
+        uploadFile,
         resetMetadata,
-        updateMetadata
+        updateMetadata,
+        newUploadFile,
+        removeUploadFile
     }
 
     // use Effect to update the isValid state whenever metadata changes
@@ -92,9 +122,56 @@ export const UploadDataProvider: React.FC<React.PropsWithChildren> = ({ children
             messages.push({type: 'error', message: 'No variable is specified. Every datasets needs to define variable. Please choose one. If you cannot find the variable, please contact the administrator'});
         }
 
-        // warnings - add a message but do not invalidate the form
+        // dataSource validation
         if (metadata.dataSource === undefined) {
             messages.push({type: 'warn', message: "No data source is specified. Are you sure you don't want to upload any data?."});
+        } else {
+            // make sure that the dataSource is valid
+            if (!metadata.dataSource.spatial_scale && !metadata.dataSource.temporal_scale) {
+                messages.push({type: 'warn', message: 'The datasource has neither  a spatial nor a temporal scale. That is most likely a mistake.'});
+            }
+            if (!metadata.dataSource.dimension_names || metadata.dataSource.dimension_names.length === 0) {
+                messages.push({type: 'warn', message: 'The datasource has no dimension names. This might be a mistake.'});
+            }
+
+            // make sure there are spatial dimension names
+            if (metadata.dataSource.spatial_scale && (!metadata.dataSource.spatial_scale.dimension_names || metadata.dataSource.spatial_scale.dimension_names.length === 0)) {
+                messages.push({type: 'warn', message: 'The spatial scale has no dimension names. If your data has a spatial index, please provide the column names.'});
+            }
+            if (metadata.dataSource.spatial_scale && metadata.dataSource.spatial_scale.dimension_names && metadata.dataSource.spatial_scale.dimension_names.length !== 2) {
+                messages.push({type: 'warn', message: 'The spatial scale has not exactly 2 dimension names (x, y). This may be a mistake.'});
+            }
+
+            // spatial extent
+            if (metadata.dataSource.spatial_scale && !metadata.dataSource.spatial_scale.extent) {
+                valid = false;
+                messages.push({type: 'error', message: 'The spatial scale has no extent. Please provide a WKT.'});
+            }
+            // spatial resolution
+            if (metadata.dataSource.spatial_scale && !metadata.dataSource.spatial_scale.resolution) {
+                valid = false;
+                messages.push({type: 'error', message: 'The spatial scale has no resolution. Please set the resolution in meter.'});
+            }
+
+            // make sure there are temporal dimension names
+            if (metadata.dataSource.temporal_scale && (!metadata.dataSource.temporal_scale.dimension_names || metadata.dataSource.temporal_scale.dimension_names.length === 0)) {
+                messages.push({type: 'warn', message: 'The temporal scale has no dimension names. If your data has a temporal index, please provide the column names.'});
+            }
+            if (metadata.dataSource.temporal_scale && metadata.dataSource.temporal_scale.dimension_names && metadata.dataSource.temporal_scale.dimension_names.length !== 1) {
+                messages.push({type: 'warn', message: 'The temporal scale has not exactly 1 dimension name. This is most likely a mistake.'});
+            }
+
+            // temporal extent
+            if (metadata.dataSource.temporal_scale && !metadata.dataSource.temporal_scale.extent) {
+                valid = false;
+                messages.push({type: 'error', message: 'The temporal scale has no extent. Please provide the start and end date.'});
+            }
+
+            // temporal resolution
+            if (metadata.dataSource.temporal_scale && !metadata.dataSource.temporal_scale.resolution) {
+                valid = false;
+                messages.push({type: 'error', message: 'The temporal scale has no resolution. Please set the resolution in the format "HH:mm".'});
+            }
         }
 
         setIsValid(valid);
