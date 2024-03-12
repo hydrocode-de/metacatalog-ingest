@@ -1,13 +1,14 @@
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Annotated
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi import FastAPI, HTTPException, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from metacatalog import api
+
 import polars as pl
 
 import models
@@ -91,7 +92,7 @@ def get_authors():
 def create_author(data: models.Author):
     # check if this is an organization
     if data.is_organisation:
-        new_author = api.add_organization(session, **{k: v for k, v in data.model_dump().items() if k not in ('id', 'uuid', 'is_organisation')})
+        new_author = api.add_organisation(session, **{k: v for k, v in data.model_dump().items() if k not in ('id', 'uuid', 'is_organisation')})
     else:
         new_author = api.add_person(session, **{k: v for k, v in data.model_dump().items() if k not in ('id', 'uuid', 'is_organisation')})
     return new_author.to_dict()
@@ -116,9 +117,9 @@ class DataPreview(BaseModel):
 
 @app.post("/api/data/preview", response_model=DataPreview)
 async def preview_data(file: UploadFile):
+    # TODO: add a check for the file type
     try:
         # Read the uploaded file
-        # df = pd.read_csv(file.file)
         df = pl.read_csv(file.file, try_parse_dates=True)
         
         # Get column names and data types
@@ -134,6 +135,28 @@ async def preview_data(file: UploadFile):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/upload")
+async def upload_data(file: UploadFile, metadata: Annotated[str, Form()]):
+    # try to read the JSON
+    try:
+        meta = models.Metadata.model_validate_json(metadata)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    # use metacatalog to add the metadata
+    #api.add_entry(session, )
+    # development -> print
+    print(meta)
+
+    # upload the data using polars
+    df = pl.read_csv(file.file, try_parse_dates=True)
+    print(df)
+
+    import time
+    time.sleep(3)
+    return {'message': 'success'}
+
 
 # Mount the static files directory
 app.mount("/", StaticFiles(directory= BASE / 'static', html=True), name="static")

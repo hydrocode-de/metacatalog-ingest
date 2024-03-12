@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Literal, Optional
 from pydantic import BaseModel
 
 
@@ -57,6 +57,49 @@ class Author(BaseModel):
     organisation_abbrev: Optional[str] = None
 
 
+class Detail(BaseModel):
+    id: Optional[int] = None 
+    name: Optional[str] = None
+    value: Optional[str | float | bool | dict] = None
+    type: Optional[Literal['string']] = None
+
+
+class TemporalScale(BaseModel):
+    id: Optional[int] = None
+    dimension_names: List[str] = []
+    observation_start: Optional[str] = None
+    observation_end: Optional[str] = None
+
+    
+class SpatialScale(BaseModel):
+    id: Optional[int] = None
+    dimension_names: List[str] = []
+    extent: Optional[str] = None
+    resolution: Optional[int] = None
+
+
+class DataSource(BaseModel):
+    id: Optional[int] = None
+    type: Optional[Literal['internal', 'netCDF']] = None
+    dimension_names: List[str] = []
+    temporal_scale: Optional[TemporalScale] = None
+    spatial_scale: Optional[SpatialScale] = None
+
+
 class Metadata(BaseModel):
-    id: int
-    uuid: str
+    id: Optional[int] = None
+    uuid: Optional[str] = None
+    title: Optional[str] = None
+    abstract: Optional[str] = None
+    external_id: Optional[str] = None
+    embargo: bool = False
+    first_author: Optional[Author] = None
+    coAuthors: List[Author] = []
+    license_id: Optional[int] = None
+    # license: Optional[License] = None
+    variable_id: Optional[int] = None
+    # variable: Optional[Variable] = None
+    keywords: List[Keyword] = []
+    details: List[Detail] = []
+    data_source: Optional[DataSource] = None
+    
