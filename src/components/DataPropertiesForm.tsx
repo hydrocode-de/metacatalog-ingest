@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Button, Col, Row, DatePicker, TimePicker, Input, InputNumber, Select } from "antd"
+import { Button, Col, Row, DatePicker, TimePicker, Input, InputNumber, Select, Flex, Space } from "antd"
 import { PlusOutlined, CloseOutlined } from "@ant-design/icons"
 import dayjs, { Dayjs } from "dayjs"
 import axios from "axios"
@@ -38,7 +38,7 @@ const DataPropertiesForm: React.FC = () => {
 
     // get the data columns valid for this source
     const [availableColumns, setAvailableColumns] = useState<DataColumn[]>([])
-    
+
     // update as the file changes
     useEffect(() => {
         // send the file to the backend to get the columns
@@ -161,16 +161,26 @@ const DataPropertiesForm: React.FC = () => {
                     
                     <div style={{marginTop: '1rem'}}>Temporal resolution</div>
                     
-                    <TimePicker 
-                        style={{width: '100%'}}
-                        placeholder="Resolution"
-                        format="HH:mm" 
-                        value={metadata.dataSource.temporal_scale.resolution || undefined} 
-                        onChange={e => {
-                            console.log(e.toLocaleString())
-                            updateMetadata('dataSource.temporal_scale.resolution', e)
-                        }}
-                    />
+                    <Flex style={{width: '100%'}}>
+                        <InputNumber 
+                            style={{width: 'auto'}}
+                            placeholder="Timestep value"
+                            value={metadata.dataSource?.temporal_scale?.resolution}
+                            onChange={val => updateMetadata('dataSource.temporal_scale.resolution', val)}
+                        />
+                        <Select
+                            style={{width: '100%'}}
+                            defaultValue={undefined}
+                            value={metadata.dataSource.temporal_scale.resolution_unit || undefined}
+                            options={[
+                                {label: 'Seconds', value: 'sec'},
+                                {label: 'Minutes', value: 'min'},
+                                {label: 'Hours', value: 'h'},
+                                {label: 'Days', value: ''}
+                            ]}
+                            onSelect={val => updateMetadata('dataSource.temporal_scale.resolution_unit', val)}
+                        />
+                    </Flex>
                 </>) : (<>
                     <Button type="dashed" style={{width: '100%'}} icon={<PlusOutlined />} onClick={() => updateMetadata('dataSource.temporal_scale', {})}>Add temporal scale</Button>
                 </>)}

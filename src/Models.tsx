@@ -70,7 +70,13 @@ export interface DataSource {
     path: string;
     variable_names: string[];
     spatial_scale?: {extent: string, resolution: number, dimension_names: string[]};
-    temporal_scale?: {resolution: dayjs.Dayjs, observation_start: dayjs.Dayjs, observation_end: dayjs.Dayjs, dimension_names: string[]};
+    temporal_scale?: {
+        resolution: number, 
+        resolution_unit: 'sec' | 'min' | 'h' | 'd',
+        observation_start: dayjs.Dayjs, 
+        observation_end: dayjs.Dayjs, 
+        dimension_names: string[]
+    };
 }
 
 export interface Metadata {
