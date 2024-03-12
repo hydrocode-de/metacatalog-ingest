@@ -30,7 +30,7 @@ const UploadForm: React.FC = () => {
                 <Button icon={<UploadOutlined />}>Select Files</Button>
             </Dragger>
             
-            <Badge.Ribbon text={invalidMessages.length} color="red">
+            <Badge.Ribbon text={invalidMessages.length} color={invalidMessages.length > 0 ? 'red' : 'green'}>
             <Collapse defaultActiveKey='validation'>
                 <Collapse.Panel key="validation" header="Validation and Upload">
                     <ValidationResult />

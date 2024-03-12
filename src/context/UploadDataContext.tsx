@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { Metadata } from "../Models";
 import { set, cloneDeep } from "lodash"
 import { UploadFile } from "antd";
+import axios from "axios";
+import { useSettings } from "./SettingsContext";
 
 interface InvalidationMessage {
     type: 'error' | 'warn';
@@ -17,6 +19,7 @@ interface UploadData {
     updateMetadata: (key: string, value: any) => void;
     newUploadFile: (file: UploadFile) => void;
     removeUploadFile: () => void;
+    upload: () => Promise<{status: 'success' | 'fail', message: string}>;
 }
 
 const initialUploadData: UploadData = {
@@ -27,6 +30,7 @@ const initialUploadData: UploadData = {
     updateMetadata: () => {},
     newUploadFile: () => {},
     removeUploadFile: () => {},
+    upload: () => Promise.resolve({status: 'fail', message: 'Implementation error'})
 }
 
 // create the Context itself
@@ -34,6 +38,10 @@ const UploadDataContext = createContext(initialUploadData);
 
 // export the Context Provider
 export const UploadDataProvider: React.FC<React.PropsWithChildren> = ({ children}) => {
+    // use the backendUrl from the settings
+    const { backendUrl } = useSettings()
+
+    // context state
     const [metadata, setMetadata] = useState<Partial<Metadata>>({});
     const [isValid, setIsValid] = useState<boolean>(false);
     const [invalidMessages, setInvalidMessages] = useState<InvalidationMessage[]>([]);
@@ -73,6 +81,29 @@ export const UploadDataProvider: React.FC<React.PropsWithChildren> = ({ children
         updateMetadata('dataSource', undefined)
     }
 
+    const upload = (): Promise<{status: 'success' | 'fail', message: string}> => {
+        if (!isValid) {
+            console.log("Cannot upload, metdata is not valid")
+            console.log(metadata)
+            return Promise.resolve({status: 'fail', message: 'Metadata is not valid'})
+        }
+        
+        // build the form data
+        const form = new FormData()
+
+        // add the form fields
+        form.append('file', uploadFile?.originFileObj!)
+        form.append('metadata', JSON.stringify(metadata))
+        
+        // make the request and return the Promise for results
+        return axios.post<{status: 'success' | 'fail', message: string}>(
+            `${backendUrl}upload`,
+            form, 
+            {headers: {'Content-Type': 'multipart/form-data', 'Accept': 'application/json'}}
+        ).then(res => res.data)
+
+    }
+
 
     // create the context value to be passed to the Provider
     const uploadData: UploadData = {
@@ -83,7 +114,8 @@ export const UploadDataProvider: React.FC<React.PropsWithChildren> = ({ children
         resetMetadata,
         updateMetadata,
         newUploadFile,
-        removeUploadFile
+        removeUploadFile,
+        upload
     }
 
     // use Effect to update the isValid state whenever metadata changes
