@@ -1,7 +1,8 @@
 import { Flex, Layout , theme} from "antd";
 import Title from "antd/es/typography/Title";
 import UploadForm from "../components/UploadForm";
-import { UploadDataProvider, useData } from "../context/UploadDataContext";
+import { UploadDataProvider } from "../context/UploadDataContext";
+import DebugButton from "../components/DebugButton";
 
 const {  Header, Content } = Layout
 
@@ -20,6 +21,8 @@ const UploadPage: React.FC = () => {
                 <Content style={{ width: 'auto', boxSizing: 'border-box', margin: '16px 24px', padding: '24px', height: '100%', overflowY: 'scroll', background: colorBgContainer, borderRadius: borderRadiusLG}}>
                 
                 <UploadForm />
+
+                <DebugButton /> 
 
                 </Content>
             </Layout>

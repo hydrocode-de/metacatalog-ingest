@@ -87,6 +87,10 @@ export const UploadDataProvider: React.FC<React.PropsWithChildren> = ({ children
             console.log(metadata)
             return Promise.resolve({status: 'fail', message: 'Metadata is not valid'})
         }
+
+        // the temporal information needs to be transformed
+        
+
         
         // build the form data
         const form = new FormData()
@@ -162,8 +166,8 @@ export const UploadDataProvider: React.FC<React.PropsWithChildren> = ({ children
             if (!metadata.dataSource.spatial_scale && !metadata.dataSource.temporal_scale) {
                 messages.push({type: 'warn', message: 'The datasource has neither  a spatial nor a temporal scale. That is most likely a mistake.'});
             }
-            if (!metadata.dataSource.dimension_names || metadata.dataSource.dimension_names.length === 0) {
-                messages.push({type: 'warn', message: 'The datasource has no dimension names. This might be a mistake.'});
+            if (!metadata.dataSource.variable_names || metadata.dataSource.variable_names.length === 0) {
+                messages.push({type: 'warn', message: 'The datasource does not reference the variable column(s). This might be a mistake.'});
             }
 
             // make sure there are spatial dimension names
@@ -194,7 +198,7 @@ export const UploadDataProvider: React.FC<React.PropsWithChildren> = ({ children
             }
 
             // temporal extent
-            if (metadata.dataSource.temporal_scale && !metadata.dataSource.temporal_scale.extent) {
+            if (metadata.dataSource.temporal_scale && !(metadata.dataSource.temporal_scale.observation_start && metadata.dataSource.temporal_scale.observation_end)) {
                 valid = false;
                 messages.push({type: 'error', message: 'The temporal scale has no extent. Please provide the start and end date.'});
             }

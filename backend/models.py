@@ -69,6 +69,7 @@ class TemporalScale(BaseModel):
     dimension_names: List[str] = []
     observation_start: Optional[str] = None
     observation_end: Optional[str] = None
+    resolution: Optional[str] = None
 
     
 class SpatialScale(BaseModel):
@@ -81,7 +82,7 @@ class SpatialScale(BaseModel):
 class DataSource(BaseModel):
     id: Optional[int] = None
     type: Optional[Literal['internal', 'netCDF']] = None
-    dimension_names: List[str] = []
+    variable_names: List[str] = []
     temporal_scale: Optional[TemporalScale] = None
     spatial_scale: Optional[SpatialScale] = None
 
@@ -93,13 +94,13 @@ class Metadata(BaseModel):
     abstract: Optional[str] = None
     external_id: Optional[str] = None
     embargo: bool = False
-    first_author: Optional[Author] = None
+    firstAuthor: Optional[Author] = None
     coAuthors: List[Author] = []
     license_id: Optional[int] = None
-    # license: Optional[License] = None
+    license: Optional[License] = None
     variable_id: Optional[int] = None
-    # variable: Optional[Variable] = None
+    variable: Optional[Variable] = None
     keywords: List[Keyword] = []
     details: List[Detail] = []
-    data_source: Optional[DataSource] = None
+    dataSource: Optional[DataSource] = None
     

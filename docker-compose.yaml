@@ -6,17 +6,11 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: metacatalog
+    expose:
+      - 5433
     ports:
-      - 5432:5432
+      - 5433:5432
     volumes:
       - ./data/pg_data:/var/lib/postgresql/data
 
-  installer:
-    image: ghcr.io/vforwater/tbr_vforwater_loader:latest
-    links:
-      - db
-    depends_on: 
-      - db 
-    environment:
-      METACATALOG_URI: postgresql://postgres:postgres@db:5432/metacatalog
-    command: ["echo", "after Postgres is installed, run: docker compose run --rm -it installer python /src/pg_init/init.py"]
+

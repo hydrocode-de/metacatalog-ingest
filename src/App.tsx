@@ -20,7 +20,7 @@ function App() {
             defaultSelectedKeys={['1']}
             items={[
               {key: '1', label: 'Upload Metadata', icon: <UploadOutlined />},
-              {key: '2', label: 'Settings', icon: <SettingOutlined />}
+              {key: '2', label: 'Settings', icon: <SettingOutlined />},
             ]}
           />
         </Sider>

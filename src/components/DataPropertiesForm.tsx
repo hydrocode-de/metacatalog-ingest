@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Button, Col, Row, DatePicker, TimePicker, Input, InputNumber, Select } from "antd"
 import { PlusOutlined, CloseOutlined } from "@ant-design/icons"
-import dayjs from "dayjs"
+import dayjs, { Dayjs } from "dayjs"
 import axios from "axios"
 import { useData } from "../context/UploadDataContext"
 import { useSettings } from "../context/SettingsContext"
@@ -83,9 +83,9 @@ const DataPropertiesForm: React.FC = () => {
                 mode="tags"
                 style={{width: '100%'}}
                 placeholder="Select the data columns"
-                value={metadata.dataSource?.dimension_names || []}
+                value={metadata.dataSource?.variable_names || []}
                 options={availableColumns.map(c => ({label: `${c.name} [${c.data_type}]`, value: c.name}))}
-                onChange={v => updateMetadata('dataSource.dimension_names', v)}
+                onChange={v => updateMetadata('dataSource.variable_names', v)}
             />
         </>) : (<>
             <p><i>Either no file uploaded or the preview did not respond any parseable column</i></p>
@@ -146,17 +146,30 @@ const DataPropertiesForm: React.FC = () => {
                     <RangePicker 
                         style={{width: '100%'}} 
                         maxDate={dayjs()} 
-                        value={metadata.dataSource.temporal_scale.extent || [undefined, undefined]} 
-                        onChange={ext => updateMetadata('dataSource.temporal_scale.extent', ext)}  
+                        value={[
+                            metadata.dataSource?.temporal_scale?.observation_start, 
+                            metadata.dataSource?.temporal_scale?.observation_end
+                        ]} 
+                        //onChange={ext => updateMetadata('dataSource.temporal_scale.extent', ext)}  
+                        
+                        onChange={([start, end]) => {
+                            //console.log([start, end])
+                            updateMetadata('dataSource.temporal_scale.observation_start', start)
+                            updateMetadata('dataSource.temporal_scale.observation_end', end)
+                        }}
                     />
                     
                     <div style={{marginTop: '1rem'}}>Temporal resolution</div>
+                    
                     <TimePicker 
                         style={{width: '100%'}}
                         placeholder="Resolution"
                         format="HH:mm" 
                         value={metadata.dataSource.temporal_scale.resolution || undefined} 
-                        onChange={e => updateMetadata('dataSource.temporal_scale.resolution', e)}
+                        onChange={e => {
+                            console.log(e.toLocaleString())
+                            updateMetadata('dataSource.temporal_scale.resolution', e)
+                        }}
                     />
                 </>) : (<>
                     <Button type="dashed" style={{width: '100%'}} icon={<PlusOutlined />} onClick={() => updateMetadata('dataSource.temporal_scale', {})}>Add temporal scale</Button>

@@ -12,12 +12,18 @@ from metacatalog import api
 import polars as pl
 
 import models
+import db_install
 
 load_dotenv()
 
 # figure out the paths
 BASE = Path(__file__).resolve().parent
 URI = os.getenv('METACATALOG_URI', 'postgresql://postgres:postgres@localhost:5432/metacatalog')
+
+# before we create the connection, we check the database
+if not db_install.is_installed():
+    print('Database tables not installed, installing now...')
+    db_install.install_tables()
 
 # create a metacatalog session
 session = api.connect_database(URI)
@@ -38,24 +44,6 @@ def get_licenses():
     # get all licenses
     licenses = api.find_license(session)
     return [license.to_dict() for license in licenses]
-
-# @app.post("/api/license", response_model=models.License)
-# def create_license(data: models.License | str | int):
-#     # check the type of the data
-#     if isinstance(data, str):
-#         license = api.find_license(session, short_title=data, return_iterator=True).first()
-#         if license is None:
-#             license = api.find_license(session, title=data, return_iterator=True).first()
-#     elif isinstance(data, int):
-#         license = api.find_license(session, id=data, return_iterator=True).first()
-#     else:
-#         license = api.add_license(session, **data)
-    
-#     # check the type
-#     if license is not None:
-#         return license.to_dict()
-#     else:
-#         raise HTTPException(status_code=404, detail=f"License with id / short_title {data} not found")
 
 @app.get("/api/variables", response_model=List[models.Variable])
 def get_variables():
@@ -144,14 +132,58 @@ async def upload_data(file: UploadFile, metadata: Annotated[str, Form()]):
     except Exception as e:
         raise HTTPException(status_code=422, detail=str(e))
 
+    print(meta)
+    return {'message': 'success'}
     # use metacatalog to add the metadata
-    #api.add_entry(session, )
+    entry = api.add_entry(
+        session=session,
+        title=meta.title,
+        author=meta.firstAuthor.id,
+        location=(42, 42),
+        variable=meta.variable.id,
+        external_id=meta.external_id,
+        license=meta.license.id,
+        embargo=meta.embargo,
+        is_partial=False
+    )
+    
+    # associate the co-authors
+    if meta.coAuthors is not None and len(meta.coAuthors) > 0:
+        api.add_persons_to_entries(session=session, entries=entry.id, persons=[author.id for author in meta.coAuthors])
+
+    # associate the keywords if any additional are given
+    if len(meta.keywords) > 0:
+        api.add_keywords_to_entries(session=session, entries=entry.id, keywords=[keyword.id for keyword in meta.keywords])
+    
+    # associate details to the entry if any are given
+    if len(meta.details) > 0:
+        api.add_details_to_entries(session=session, entries=entry.id, details=[detail.model_dump() for detail in meta.details])
+    
+    # create the data source
+    if meta.data_source is not None:
+        # build the tablename from the filename
+        tablename = '_'.join([chunk for chunk in file.filename.split('.')[:-1]])
+        ds = entry.create_datasource(
+            path=tablename,
+            type=meta.data_source.type,
+            datatype='timeseries', # TODO: this is just a shortcut
+            variable_names=meta.data_source.variable_names,
+            commit=True
+        )
+
+        # add the scales
+        if meta.data_source.temporal_scale is not None:
+            ds.create_scale(
+                scale_dimension='temporal',
+                resolution=meta.data_source.temporal_scale.resolution
+            )
+
     # development -> print
     print(meta)
 
     # upload the data using polars
-    df = pl.read_csv(file.file, try_parse_dates=True)
-    print(df)
+    #df = pl.read_csv(file.file, try_parse_dates=True)
+    #print(df)
 
     import time
     time.sleep(3)
