@@ -67,6 +67,7 @@ export interface Detail {
 export interface DataSource {
     id: number;
     type: 'csv';
+    path: string;
     dimension_names: string[];
     spatial_scale?: {extent: string, resolution: number, dimension_names: string[]};
     temporal_scale?: {resolution: dayjs.Dayjs, extent: [dayjs.Dayjs, dayjs.Dayjs], dimension_names: string[]};
