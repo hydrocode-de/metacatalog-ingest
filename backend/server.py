@@ -5,7 +5,8 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 from metacatalog import api
 
@@ -14,11 +15,20 @@ import polars as pl
 import models
 import db_install
 
-load_dotenv()
+# create the Settings class
+class Settings(BaseSettings):
+    uri: str = Field("postgresql://postgres:postgres@localhost:5432/metacatalog", alias='METACATALOG_URI')
+    base_path: Path = Path(__file__).resolve().parent
 
-# figure out the paths
-BASE = Path(__file__).resolve().parent
-URI = os.getenv('METACATALOG_URI', 'postgresql://postgres:postgres@localhost:5432/metacatalog')
+    # uvicorn settings
+    host: str = '127.0.0.1'
+    port: int = 8000
+    reload: bool = True
+
+# load settings from possible .env file and instatiate the settings
+load_dotenv()
+settings = Settings()
+
 
 # before we create the connection, we check the database
 if not db_install.is_installed():
@@ -26,7 +36,7 @@ if not db_install.is_installed():
     db_install.install_tables()
 
 # create a metacatalog session
-session = api.connect_database(URI)
+session = api.connect_database(settings.uri)
 
 app = FastAPI()
 
@@ -227,7 +237,7 @@ async def upload_data(file: UploadFile, metadata: Annotated[str, Form()]):
         # TODO: there has to be some kind of file-handler here
         try:
             df = pl.read_csv(file.file, try_parse_dates=True)
-            df.write_database(f'data."{ds.path}"', URI, if_table_exists='append')
+            df.write_database(f'data."{ds.path}"', settings.uri, if_table_exists='append')
         except Exception as e:
             return {'status': 'error', 'message': f"[pl.read_csv]: Data not uploaded. Details: {str(e)}"}
 
@@ -236,9 +246,9 @@ async def upload_data(file: UploadFile, metadata: Annotated[str, Form()]):
 
 
 # Mount the static files directory
-app.mount("/", StaticFiles(directory= BASE / 'static', html=True), name="static")
+app.mount("/", StaticFiles(directory= settings.base_path / 'static', html=True), name="static")
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("server:app", reload=True)
+    uvicorn.run("server:app", reload=settings.reload, host=settings.host, port=settings.port)
