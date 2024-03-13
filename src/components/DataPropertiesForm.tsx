@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
-import { Button, Col, Row, DatePicker, TimePicker, Input, InputNumber, Select, Flex, Space } from "antd"
+import { Button, Col, Row, DatePicker, Input, InputNumber, Select, Flex } from "antd"
 import { PlusOutlined, CloseOutlined } from "@ant-design/icons"
-import dayjs, { Dayjs } from "dayjs"
+import dayjs from "dayjs"
 import axios from "axios"
 import { useData } from "../context/UploadDataContext"
 import { useSettings } from "../context/SettingsContext"
@@ -16,15 +16,15 @@ interface DataColumn {
     data_type: 'string' | 'number' | 'datetime'
 }
 
-interface DataSource {
-    type: string,
-    key: string,
-    alias?: string
-}
-const DATA_SOURCE_TYPES: DataSource[] = [
-    {key: 'csv', alias: 'CSV', type: 'text/csv'},
-    {key: 'netcdf', alias: 'NetCDF', type: 'application/x-netcdf'}
-] as const
+// interface DataSource {
+//     type: string,
+//     key: string,
+//     alias?: string
+// }
+// const DATA_SOURCE_TYPES: DataSource[] = [
+//     {key: 'csv', alias: 'CSV', type: 'text/csv'},
+//     {key: 'netcdf', alias: 'NetCDF', type: 'application/x-netcdf'}
+// ] as const
 
 const DataPropertiesForm: React.FC = () => {
     // get the backend url from the settings
@@ -34,7 +34,7 @@ const DataPropertiesForm: React.FC = () => {
     const { metadata, updateMetadata, updateMetadataMany, uploadFile } = useData()
 
     // source type
-    const [sourceType, setSourceType] = useState<DataSource>()
+    // const [sourceType, setSourceType] = useState<DataSource>()
 
     // get the data columns valid for this source
     const [availableColumns, setAvailableColumns] = useState<DataColumn[]>([])
@@ -62,12 +62,12 @@ const DataPropertiesForm: React.FC = () => {
         }
 
         // set the source type
-        if (DATA_SOURCE_TYPES.map(t => t.type).includes(uploadFile?.type || '')) {
-            const type = DATA_SOURCE_TYPES.find(t => t.type === uploadFile?.type)
-            setSourceType(type)
-        } else {
-            setSourceType(undefined)
-        }
+        // if (DATA_SOURCE_TYPES.map(t => t.type).includes(uploadFile?.type || '')) {
+        //     const type = DATA_SOURCE_TYPES.find(t => t.type === uploadFile?.type)
+        //     setSourceType(type)
+        // } else {
+        //     setSourceType(undefined)
+        // }
     }, [uploadFile])
 
     if (!uploadFile) {
