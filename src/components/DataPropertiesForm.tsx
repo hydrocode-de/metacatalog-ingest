@@ -31,7 +31,7 @@ const DataPropertiesForm: React.FC = () => {
     const { backendUrl } = useSettings()
 
     // load the data context to listen to file changes
-    const { metadata, updateMetadata, uploadFile } = useData()
+    const { metadata, updateMetadata, updateMetadataMany, uploadFile } = useData()
 
     // source type
     const [sourceType, setSourceType] = useState<DataSource>()
@@ -154,8 +154,12 @@ const DataPropertiesForm: React.FC = () => {
                         
                         onChange={([start, end]) => {
                             //console.log([start, end])
-                            updateMetadata('dataSource.temporal_scale.observation_start', start)
-                            updateMetadata('dataSource.temporal_scale.observation_end', end)
+                            updateMetadataMany({
+                                'dataSource.temporal_scale.observation_start': start,
+                                'dataSource.temporal_scale.observation_end': end
+                            })
+                            // updateMetadata('dataSource.temporal_scale.observation_start', start)
+                            // updateMetadata('dataSource.temporal_scale.observation_end', end)
                         }}
                     />
                     

@@ -17,6 +17,7 @@ interface UploadData {
     uploadFile?: UploadFile;
     resetMetadata: () => void;
     updateMetadata: (key: string, value: any) => void;
+    updateMetadataMany: (updates: {[key: string]: any}) => void;
     newUploadFile: (file: UploadFile) => void;
     removeUploadFile: () => void;
     upload: () => Promise<{status: 'success' | 'fail', message: string}>;
@@ -28,6 +29,7 @@ const initialUploadData: UploadData = {
     invalidMessages: [],
     resetMetadata: () => {},
     updateMetadata: () => {},
+    updateMetadataMany: () => {},
     newUploadFile: () => {},
     removeUploadFile: () => {},
     upload: () => Promise.resolve({status: 'fail', message: 'Implementation error'})
@@ -62,6 +64,19 @@ export const UploadDataProvider: React.FC<React.PropsWithChildren> = ({ children
         setMetadata(currentMetadata);
     }
 
+    const updateMetadataMany = (updates: {[key: string]: any}) => {
+        // create a copy of the current metadata
+        const currentMetadata = cloneDeep(metadata);
+
+        // update the copy
+        Object.entries(updates).forEach(([key, value]) => {
+            set(currentMetadata, key, value);
+        })
+
+        // update the state to the new metadata
+        setMetadata(currentMetadata);
+    }
+
     // file handling
     const newUploadFile = (file: UploadFile) => {
         // set the file
@@ -87,11 +102,7 @@ export const UploadDataProvider: React.FC<React.PropsWithChildren> = ({ children
             console.log(metadata)
             return Promise.resolve({status: 'fail', message: 'Metadata is not valid'})
         }
-
-        // the temporal information needs to be transformed
-        
-
-        
+      
         // build the form data
         const form = new FormData()
 
@@ -117,6 +128,7 @@ export const UploadDataProvider: React.FC<React.PropsWithChildren> = ({ children
         uploadFile,
         resetMetadata,
         updateMetadata,
+        updateMetadataMany,
         newUploadFile,
         removeUploadFile,
         upload

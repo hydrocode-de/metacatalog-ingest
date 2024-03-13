@@ -84,6 +84,7 @@ export interface Metadata {
     abstract: string;
     external_id?: string;
     embargo?: boolean;
+    location?: {longitude: number, latitude: number};
     firstAuthor: Author;
     coAuthors: Author[];
     keywords: Keyword[];

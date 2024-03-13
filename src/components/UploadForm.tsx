@@ -1,4 +1,4 @@
-import {   Badge, Button, Checkbox, Collapse, Input } from 'antd';
+import {   Badge, Button, Checkbox, Collapse, Flex, Input, InputNumber } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import Dragger from 'antd/es/upload/Dragger';
 import Title from 'antd/es/typography/Title';
@@ -44,6 +44,11 @@ const UploadForm: React.FC = () => {
                 <Collapse.Panel key="main_info" header="General Information">
                     <Input addonBefore="Title" placeholder="Unique descriptive Dataset title" value={metadata.title} onChange={e => updateMetadata('title', e.target.value)} />
                     <TextArea placeholder="Abstract" autoSize={{minRows: 5, maxRows: 10}} value={metadata.abstract} onChange={e => updateMetadata('abstract', e.target.value)} />
+                    <Flex style={{width: '100%'}}>
+                        <InputNumber style={{width: '100%'}} addonBefore="Longitude" value={metadata.location?.longitude || undefined} onChange={value => updateMetadata('location', {...metadata.location, longitude: value})} />
+                        <InputNumber style={{width: '100%'}} addonBefore="Latitude" value={metadata.location?.latitude || undefined} onChange={value => updateMetadata('location', {...metadata.location, latitude: value})} />
+                    </Flex>
+
                     <Collapse>
                         <Collapse.Panel key="external_id" header="Optional Attributes">
                             <Input placeholder="optional ID by external data provider" addonBefore="External ID" />
