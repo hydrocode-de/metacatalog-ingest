@@ -2,6 +2,7 @@ import os
 
 from metacatalog import api, models
 from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.schema import CreateSchema
 
 URI = os.getenv('METACATALOG_URI', 'postgresql://postgres:postgres@localhost:5432/metacatalog')
 
@@ -31,6 +32,10 @@ def install_tables():
     # create the tables
     api.create_tables(session)
     api.populate_defaults(session)
+
+    # TODO: this needs to be added to metacatalog
+    session.bind.execute(CreateSchema('data'))
+    session.commit()
 
     # close the session
     session.close()

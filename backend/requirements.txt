@@ -5,3 +5,4 @@ xarray[complete]
 python-dotenv
 python-multipart
 polars
+pyarrow

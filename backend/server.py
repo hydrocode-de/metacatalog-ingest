@@ -132,62 +132,107 @@ async def upload_data(file: UploadFile, metadata: Annotated[str, Form()]):
     except Exception as e:
         raise HTTPException(status_code=422, detail=str(e))
 
-    print(meta)
-    return {'message': 'success'}
     # use metacatalog to add the metadata
-    entry = api.add_entry(
-        session=session,
-        title=meta.title,
-        author=meta.firstAuthor.id,
-        location=(42, 42),
-        variable=meta.variable.id,
-        external_id=meta.external_id,
-        license=meta.license.id,
-        embargo=meta.embargo,
-        is_partial=False
-    )
+    try:
+        entry = api.add_entry(
+            session=session,
+            title=meta.title,
+            abstract=meta.abstract,
+            author=meta.firstAuthor.id,
+            location=meta.location.wkt if meta.location is not None else None,
+            variable=meta.variable.id,
+            external_id=meta.external_id,
+            license=meta.license.id,
+            embargo=meta.embargo,
+            is_partial=False
+        )
+    except Exception as e:
+        return {'status': 'error', 'message': f"[API.add_entry]: Entry not created. Details: {str(e)}"}
     
     # associate the co-authors
-    if meta.coAuthors is not None and len(meta.coAuthors) > 0:
-        api.add_persons_to_entries(session=session, entries=entry.id, persons=[author.id for author in meta.coAuthors])
+    try:
+        if meta.coAuthors is not None and len(meta.coAuthors) > 0:
+            api.add_persons_to_entries(
+                session=session,
+                entries=entry.id,
+                persons=[author.id for author in meta.coAuthors],
+                roles=['coAuthor' for _ in meta.coAuthors],
+                order=[i + 2 for i in range(len(meta.coAuthors))]
+            )
+    except Exception as e:
+        return {'status': 'error', 'message': f"[API.add_persons_to_entries]: Co-Authors not added. Details: {str(e)}"}
 
     # associate the keywords if any additional are given
-    if len(meta.keywords) > 0:
-        api.add_keywords_to_entries(session=session, entries=entry.id, keywords=[keyword.id for keyword in meta.keywords])
-    
+    try:
+        if len(meta.keywords) > 0:
+            api.add_keywords_to_entries(session=session, entries=entry.id, keywords=[keyword.id for keyword in meta.keywords], )
+    except Exception as e:
+        return {'status': 'error', 'message': f"[API.add_keywords_to_entries]: Keywords not added. Details: {str(e)}"}
+        
     # associate details to the entry if any are given
-    if len(meta.details) > 0:
-        api.add_details_to_entries(session=session, entries=entry.id, details=[detail.model_dump() for detail in meta.details])
+    try:
+        if len(meta.details) > 0:
+            api.add_details_to_entries(
+                session=session, 
+                entries=entry.id, 
+                details=[dict(key=detail.name, value=detail.value) for detail in meta.details]  # TODO: here, more than string is possible
+            )
+    except Exception as e:
+        return {'status': 'error', 'message': f"[API.add_details_to_entries]: Details not added. Details: {str(e)}"}
     
     # create the data source
-    if meta.data_source is not None:
-        # build the tablename from the filename
-        tablename = '_'.join([chunk for chunk in file.filename.split('.')[:-1]])
-        ds = entry.create_datasource(
-            path=tablename,
-            type=meta.data_source.type,
-            datatype='timeseries', # TODO: this is just a shortcut
-            variable_names=meta.data_source.variable_names,
-            commit=True
-        )
+    if meta.dataSource is not None:
+        try:
+            # build the tablename from the filename
+            tablename = '_'.join([chunk for chunk in file.filename.split('.')[:-1]])
+            ds = entry.create_datasource(
+                path=tablename, # TODO: this is not yet correct
+                type=meta.dataSource.type,
+                datatype='timeseries', # TODO: this is just a shortcut
+                variable_names=meta.dataSource.variable_names,
+                commit=True
+            )
+        except Exception as e:
+            return {'status': 'error', 'message': f"[API.create_datasource]: DataSource not created. Details: {str(e)}"}
 
         # add the scales
-        if meta.data_source.temporal_scale is not None:
-            ds.create_scale(
-                scale_dimension='temporal',
-                resolution=meta.data_source.temporal_scale.resolution
-            )
+        try:
+            if meta.dataSource.temporal_scale is not None:
+                ds.create_scale(
+                    scale_dimension='temporal',
+                    resolution=f"{meta.dataSource.temporal_scale.resolution}{meta.dataSource.temporal_scale.resolution_unit}" if meta.dataSource.temporal_scale.resolution is not None else "",
+                    extent=[
+                        meta.dataSource.temporal_scale.observation_start,
+                        meta.dataSource.temporal_scale.observation_end
+                    ],
+                    support=1.0,
+                    dimension_names = meta.dataSource.temporal_scale.dimension_names,
+                    commit=True
+                )
+            if meta.dataSource.spatial_scale is not None:
+                ds.create_scale(
+                    scale_dimension='spatial',
+                    resolution=meta.dataSource.spatial_scale.resolution,
+                    extent=meta.dataSource.spatial_scale.extent,
+                    support=1.0,
+                    dimension_names = meta.dataSource.spatial_scale.dimension_names,
+                    commit=True
+                )
+        except Exception as e:
+            return {'status': 'error', 'message': f"[API.create_scale]: Scales not created. Details: {str(e)}"}
 
-    # development -> print
-    print(meta)
+        # TODO: some kind of profiling here
 
-    # upload the data using polars
-    #df = pl.read_csv(file.file, try_parse_dates=True)
-    #print(df)
+        # finally handle the upload of the data if it is a CSV file
+        # TODO: there has to be some kind of file-handler here
+        try:
+            df = pl.read_csv(file.file, try_parse_dates=True)
+            df.write_database(f'data."{ds.path}"', URI, if_table_exists='append')
+        except Exception as e:
+            return {'status': 'error', 'message': f"[pl.read_csv]: Data not uploaded. Details: {str(e)}"}
 
-    import time
-    time.sleep(3)
-    return {'message': 'success'}
+    # TODO: add error boundaries here and return more meaningful messages
+    return {'status': 'success', 'message': f"Created new Entry <ID={entry.id}>"}
 
 
 # Mount the static files directory

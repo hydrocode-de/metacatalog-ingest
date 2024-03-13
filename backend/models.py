@@ -69,7 +69,8 @@ class TemporalScale(BaseModel):
     dimension_names: List[str] = []
     observation_start: Optional[str] = None
     observation_end: Optional[str] = None
-    resolution: Optional[str] = None
+    resolution: Optional[int] = None
+    resolution_unit: Optional[str] = None
 
     
 class SpatialScale(BaseModel):
@@ -87,6 +88,14 @@ class DataSource(BaseModel):
     spatial_scale: Optional[SpatialScale] = None
 
 
+class Location(BaseModel):
+    longitude: Optional[float] = None
+    latitude: Optional[float] = None
+
+    @property
+    def wkt(self):
+        return f'POINT ({self.longitude} {self.latitude})'
+
 class Metadata(BaseModel):
     id: Optional[int] = None
     uuid: Optional[str] = None
@@ -94,6 +103,7 @@ class Metadata(BaseModel):
     abstract: Optional[str] = None
     external_id: Optional[str] = None
     embargo: bool = False
+    location: Optional[Location] = None
     firstAuthor: Optional[Author] = None
     coAuthors: List[Author] = []
     license_id: Optional[int] = None
