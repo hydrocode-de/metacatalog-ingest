@@ -1,5 +1,4 @@
 from typing import List, Optional, Literal, Annotated
-import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, UploadFile, Form
