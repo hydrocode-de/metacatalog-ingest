@@ -5,5 +5,5 @@ uvicorn
 xarray[complete]
 python-dotenv
 python-multipart
-polars
+pandas
 pyarrow

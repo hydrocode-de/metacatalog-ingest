@@ -9,7 +9,7 @@ from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 from metacatalog import api
 
-import polars as pl
+import pandas as pd
 
 import models
 import db_install
@@ -117,7 +117,7 @@ async def preview_data(file: UploadFile):
     # TODO: add a check for the file type
     try:
         # Read the uploaded file
-        df = pl.read_csv(file.file, try_parse_dates=True)
+        df = pd.read_csv(file.file, parse_dates=True)
         
         # Get column names and data types
         column_names = df.columns
@@ -235,8 +235,9 @@ async def upload_data(file: UploadFile, metadata: Annotated[str, Form()]):
         # finally handle the upload of the data if it is a CSV file
         # TODO: there has to be some kind of file-handler here
         try:
-            df = pl.read_csv(file.file, try_parse_dates=True)
-            df.write_database(f'data."{ds.path}"', settings.uri, if_table_exists='append')
+            df = pd.read_csv(file.file, parse_dates=True)
+            df.to_sql(ds.path, settings.uri, if_exists='append', schema='data')  # TODO: if_exists???
+            #df.write_database(f'data."{ds.path}"', settings.uri, if_table_exists='append')
         except Exception as e:
             return {'status': 'error', 'message': f"[pl.read_csv]: Data not uploaded. Details: {str(e)}"}
 
