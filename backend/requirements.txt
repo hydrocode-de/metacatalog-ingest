@@ -6,5 +6,4 @@ xarray[complete]
 python-dotenv
 python-multipart
 polars
-polars-lts-cpu
 pyarrow
