@@ -1,34 +1,22 @@
-import { Layout, Menu } from "antd"
-import { UploadOutlined, SettingOutlined } from "@ant-design/icons"
+import { createBrowserRouter, RouterProvider } from "react-router-dom"
 
 import UploadPage from "./pages/UploadPage"
+import SettingsPage from "./pages/SettingsPage"
+import MainLayout from "./pages/MainLayout"
 
-
-const {  Header, Sider } = Layout
+// build the routes
+const router = createBrowserRouter([
+  { element: <MainLayout />, children: [
+    { index: true, path: "/", element: <UploadPage />},
+    { path: "/settings", element: <SettingsPage />}
+  ]}
+  
+])
 
 function App() {
   return (
     <>
-      <Layout style={{minHeight: '100vh'}}>
-        <Sider collapsible>
-          <Header>
-
-          </Header>
-          <Menu
-            theme="dark"
-            mode="inline"
-            defaultSelectedKeys={['1']}
-            items={[
-              {key: '1', label: 'Upload Metadata', icon: <UploadOutlined />},
-              {key: '2', label: 'Settings', icon: <SettingOutlined />},
-            ]}
-          />
-        </Sider>
-
-        <UploadPage />
-
-      </Layout>
-
+      <RouterProvider router={router} />
     </>
   )
 }
