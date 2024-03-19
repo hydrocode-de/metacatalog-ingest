@@ -1,30 +1,21 @@
-# React + TypeScript + Vite
+# MetaCatalog Ingest
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Upload application for the Metacatalog ecosystem. This application consists of three parts:
 
-Currently, two official plugins are available:
+* `/backend`: A FastAPI uvicorn application that uses `metacatalog` to connect to the MetaCatalog Postgres database and basically manages the upload into the database
+* `/frontend`: A Vite / React.js / Ant.Design frontend to guide the user through the upload process
+* Docker: a `./Dockerfile` that build the frontend and starts uvicorn to serve the API (and the frontend), as well as a `docker-compose.yml` that starts a fresh Postgres along
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+In case you use the Dockerfile only, make sure to provide a connection to the actual database using the environment variable `METACATALOG_URI`.
 
-## Expanding the ESLint configuration
+### Backend Url
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+With version v0.4.0 it is possible to change the backend url in the frontend, using the Settings page. These settings are also stored in the local storage of the browser, meaning they are persistent over sessions. This setting is necessary, if you
+run the application on a different port, or behind a proxy server.
 
-- Configure the top-level `parserOptions` property like this:
+What it does not do:
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
+* Currently, only CSV import of data is possible
+* It does not provide any kind of authentication or authorization
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+Be aware that some fields are quite annoying and the validation is not perfect yet. This will be improved with the next few versions.
