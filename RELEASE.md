@@ -8,6 +8,11 @@ Upload application for the Metacatalog ecosystem. This application consists of t
 
 In case you use the Dockerfile only, make sure to provide a connection to the actual database using the environment variable `METACATALOG_URI`.
 
+### Backend Url
+
+With version v0.4.0 it is possible to change the backend url in the frontend, using the Settings page. These settings are also stored in the local storage of the browser, meaning they are persistent over sessions. This setting is necessary, if you
+run the application on a different port, or behind a proxy server.
+
 What it does not do:
 
 * Currently, only CSV import of data is possible
