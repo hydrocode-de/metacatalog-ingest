@@ -1,5 +1,9 @@
 FROM python:3.12
 
+# recognize build args for the vite build process
+ARG VITE_BACKEND_URL
+ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
+
 # update and install packages
 RUN apt update && apt upgrade -y && \
     apt install nodejs npm -y && \

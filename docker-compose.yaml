@@ -17,6 +17,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - VITE_BACKEND_URL=http://127.0.0.1:8000/api/
+
     ports:
       - 8000:8000
     environment:
